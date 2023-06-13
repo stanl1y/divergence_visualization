@@ -26,7 +26,7 @@ def plot(
         label="result distribution",
     )
     plt.legend()
-    plt.xlim([-2.5,2.5])
+    plt.xlim([-4,4])
     if save_img:
         plt.savefig(f"distribution_{distance_measure}.png")
         plt.close()

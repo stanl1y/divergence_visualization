@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import copy
 from plot import plot
 
+
 def get_divergence(distance_measure):
     if distance_measure == "fkl":
         return fkl
@@ -19,7 +20,7 @@ def get_divergence(distance_measure):
 def fkl(target_distributions, result_distribution):
     fkl = 0
     for target_distribution in target_distributions:
-        fkl += torch.mean(target_distribution.entropy())
+        fkl -= torch.mean(target_distribution.entropy())
         fkl -= torch.mean(
             result_distribution.log_prob(target_distribution.rsample(torch.Size([256])))
         )
@@ -28,15 +29,17 @@ def fkl(target_distributions, result_distribution):
 
 def rkl(target_distributions, result_distribution):
     rkl = 0
-    rkl += torch.mean(result_distribution.entropy())
+    rkl -= torch.mean(result_distribution.entropy())
+    sampled_data = result_distribution.rsample(torch.Size([10]))
     q_log_p = torch.hstack(
         [
-            target_distribution.log_prob(result_distribution.rsample(torch.Size([256])))
+            target_distribution.log_prob(sampled_data)
             for target_distribution in target_distributions
         ]
     )
-    q_log_p=torch.max(q_log_p,axis=1)[0]
+    q_log_p = torch.log(torch.mean(q_log_p.exp(), axis=1) + 0.00000001)
     rkl -= torch.mean(q_log_p)
+
     return rkl
 
 
@@ -65,7 +68,7 @@ def divergence_minimization(target_distributions, divergence, lr, iter_num):
     best_loss = 10000
     best_mean = copy.deepcopy(mean)
     best_std = copy.deepcopy(std)
-    frame_list=[]
+    frame_list = []
     for i in range(iter_num):
         if std < 0.05:
             break
@@ -79,8 +82,8 @@ def divergence_minimization(target_distributions, divergence, lr, iter_num):
         loss.backward()
         optimizer.step()
         loss_list.append(loss.detach().numpy())
-        if (i%100==0):
-            img=plot(target_distributions, result_distribution,save_img=False)
+        if i % 100 == 0:
+            img = plot(target_distributions, result_distribution, save_img=False)
             frame_list.append(img)
     # plot loss
     plot_loss(loss_list)

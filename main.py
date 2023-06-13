@@ -30,20 +30,12 @@ def get_config():
 
 if __name__ == "__main__":
     config = get_config()
-    target_distributions = get_target_distribution([[-1.0], [1.0]], [[0.3], [0.2]])
+    target_distributions = get_target_distribution([[-1.5],[1.5]], [[0.2],[0.5]])
     divergence = get_divergence(config.distance_measure)
     result_distribution, frame_list = divergence_minimization(
         target_distributions, divergence, config.lr, config.iter_num
     )
     plot(target_distributions, result_distribution, config.distance_measure)
-    # turn frame_list(list of np array) into gif
-    # frame_list[0].save(
-    #     f"distribution_{config.distance_measure}.gif",
-    #     save_all=True,
-    #     append_images=frame_list[1:],
-    #     duration=50,
-    #     loop=0,
-    # )
 
     imageio.mimsave(
         f"distribution_{config.distance_measure}.gif",
