@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 import copy
-
+from plot import plot
 
 def get_divergence(distance_measure):
     if distance_measure == "fkl":
@@ -20,15 +20,23 @@ def fkl(target_distributions, result_distribution):
     fkl = 0
     for target_distribution in target_distributions:
         fkl += torch.mean(target_distribution.entropy())
-        fkl -= torch.mean(result_distribution.log_prob(target_distribution.rsample(torch.Size([256]))))
+        fkl -= torch.mean(
+            result_distribution.log_prob(target_distribution.rsample(torch.Size([256])))
+        )
     return fkl
 
 
 def rkl(target_distributions, result_distribution):
     rkl = 0
     rkl += torch.mean(result_distribution.entropy())
-    q_log_q_list=[torch.mean(target_distribution.log_prob(result_distribution.rsample(torch.Size([256])))) for target_distribution in target_distributions]
-    rkl -= torch.max(torch.tensor(q_log_q_list))
+    q_log_p = torch.hstack(
+        [
+            target_distribution.log_prob(result_distribution.rsample(torch.Size([256])))
+            for target_distribution in target_distributions
+        ]
+    )
+    q_log_p=torch.max(q_log_p,axis=1)[0]
+    rkl -= torch.mean(q_log_p)
     return rkl
 
 
@@ -57,12 +65,13 @@ def divergence_minimization(target_distributions, divergence, lr, iter_num):
     best_loss = 10000
     best_mean = copy.deepcopy(mean)
     best_std = copy.deepcopy(std)
-    for _ in range(iter_num):
-        if std<0.05:
+    frame_list=[]
+    for i in range(iter_num):
+        if std < 0.05:
             break
         result_distribution = torch.distributions.normal.Normal(mean, std)
         loss = divergence(target_distributions, result_distribution)
-        if loss < best_loss:    
+        if loss < best_loss:
             best_loss = loss
             best_mean = copy.deepcopy(mean)
             best_std = copy.deepcopy(std)
@@ -70,10 +79,12 @@ def divergence_minimization(target_distributions, divergence, lr, iter_num):
         loss.backward()
         optimizer.step()
         loss_list.append(loss.detach().numpy())
-
+        if (i%100==0):
+            img=plot(target_distributions, result_distribution,save_img=False)
+            frame_list.append(img)
     # plot loss
     plot_loss(loss_list)
-    return torch.distributions.normal.Normal(best_mean, best_std)
+    return torch.distributions.normal.Normal(best_mean, best_std), frame_list
 
 
 def plot_loss(loss_list):
