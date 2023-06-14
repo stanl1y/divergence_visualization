@@ -4,7 +4,7 @@ import scipy.stats as stats
 from io import BytesIO
 
 
-def plot(
+def plot_distribution(
     target_distributions, result_distribution, distance_measure=None, save_img=True
 ):
     plt.figure()
@@ -26,9 +26,9 @@ def plot(
         label="result distribution",
     )
     plt.legend()
-    plt.xlim([-4,4])
+    plt.xlim([-4, 4])
     if save_img:
-        plt.savefig(f"distribution_{distance_measure}.png")
+        plt.savefig(f"result/distribution_{distance_measure}.png")
         plt.close()
     else:
         # return image (numpy array)
@@ -40,3 +40,11 @@ def plot(
         img *= 255
         img = img.astype(np.uint8)
         return img
+
+
+def plot_loss(loss_list, distance_measure):
+    plt.plot(loss_list)
+    plt.xlabel("iteration")
+    plt.ylabel("loss")
+    # save
+    plt.savefig(f"result/loss{distance_measure}.png")

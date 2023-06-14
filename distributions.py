@@ -3,12 +3,16 @@ import torch
 from torch.distributions.normal import Normal
 
 
-def get_target_distribution(means, stds):
-    # means = [[0, 0], [1, 1], [2, 2]]
-    # stds = [[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]]
-    # if len(means[0]) > 1: # multivariate
-    #     distribution = MultivariateNormal
-    # else:
+def get_target_distribution():
+    with open("target_distribution_config", "r") as f:
+        f.readline() # skip first line
+        lines = f.readlines()
+        means = []
+        stds = []
+        for line in lines:
+            mean, std = line.split(",")
+            means.append([float(mean)])
+            stds.append([float(std)])
     distribution = Normal
     target_distributions = []
     for i in range(len(means)):

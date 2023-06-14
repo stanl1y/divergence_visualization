@@ -1,7 +1,7 @@
 import argparse
 from distributions import get_target_distribution
 from divergence import get_divergence, divergence_minimization
-from plot import plot
+from plot import plot_distribution
 import imageio
 
 
@@ -20,6 +20,12 @@ def get_config():
         help="number of training iteration",
     )
     parser.add_argument(
+        "--sample_num",
+        type=int,
+        default="10",
+        help="number of data point sampled from distribution",
+    )
+    parser.add_argument(
         "--lr",
         type=float,
         default="0.0001",
@@ -30,15 +36,14 @@ def get_config():
 
 if __name__ == "__main__":
     config = get_config()
-    target_distributions = get_target_distribution([[-1.5],[1.5]], [[0.2],[0.5]])
-    divergence = get_divergence(config.distance_measure)
+    target_distributions = get_target_distribution()
     result_distribution, frame_list = divergence_minimization(
-        target_distributions, divergence, config.lr, config.iter_num
+        target_distributions, config.distance_measure, config.lr, config.iter_num, config.sample_num
     )
-    plot(target_distributions, result_distribution, config.distance_measure)
+    plot_distribution(target_distributions, result_distribution, config.distance_measure)
 
     imageio.mimsave(
-        f"distribution_{config.distance_measure}.gif",
+        f"result/distribution_{config.distance_measure}.gif",
         frame_list,
         loop=0,
         duration=100,  # output gif  # array of input frames
