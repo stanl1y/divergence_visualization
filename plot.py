@@ -5,7 +5,7 @@ from io import BytesIO
 
 
 def plot_distribution(
-    target_distributions, result_distribution, distance_measure=None, save_img=True
+    target_distributions, result_distribution, distance_measure=None, optimizer_type=None, save_img=True
 ):
     plt.figure()
     for target_distribution in target_distributions:
@@ -28,7 +28,7 @@ def plot_distribution(
     plt.legend()
     plt.xlim([-4, 4])
     if save_img:
-        plt.savefig(f"result/distribution_{distance_measure}.png")
+        plt.savefig(f"result/distribution_{distance_measure}_{optimizer_type}.png")
         plt.close()
     else:
         # return image (numpy array)
@@ -42,9 +42,12 @@ def plot_distribution(
         return img
 
 
-def plot_loss(loss_list, distance_measure):
-    plt.plot(loss_list)
+def plot_loss(loss_list, distance_measure, optimizer_type):
+    loss_list=loss_list[::20]
+    smoothed_loss = np.convolve(loss_list, np.ones(100)/100, mode='valid')
+    plt.plot(smoothed_loss)
+
     plt.xlabel("iteration")
     plt.ylabel("loss")
     # save
-    plt.savefig(f"result/loss{distance_measure}.png")
+    plt.savefig(f"result/loss_{distance_measure}_{optimizer_type}.png")

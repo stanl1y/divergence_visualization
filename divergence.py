@@ -60,15 +60,23 @@ def w2(target_distributions, result_distribution, sample_num=None):
         ) + torch.sum((target_distribution.stddev - result_distribution.stddev) ** 2)
     return w2
 
+def get_optimizer(params, lr, optimizer_type="adam"):
+    if optimizer_type == "adam":
+        return torch.optim.Adam(params, lr=lr)
+    elif optimizer_type == "sgd":
+        return torch.optim.SGD(params, lr=lr)
+    else:
+        raise ValueError("optimizer not supported")
 
-def divergence_minimization(target_distributions, distance_measure, lr, iter_num, sample_num):
+
+def divergence_minimization(target_distributions, distance_measure, lr, iter_num, sample_num, optimizer_type="adam"):
     # result_distribution = MultivariateNormal(torch.tensor([0.0, 0.0]), torch.eye(2))
     divergence = get_divergence(distance_measure)
     mean = torch.tensor([0.0], requires_grad=True)
     std = torch.tensor([1.0], requires_grad=True)
-    optimizer = torch.optim.Adam([mean, std], lr=lr)
+    optimizer = get_optimizer([mean, std], lr, optimizer_type)
     loss_list = []
-    best_loss = 10000
+    best_loss = float("inf")
     best_mean = copy.deepcopy(mean)
     best_std = copy.deepcopy(std)
     frame_list = []
@@ -77,19 +85,21 @@ def divergence_minimization(target_distributions, distance_measure, lr, iter_num
             break
         result_distribution = torch.distributions.normal.Normal(mean, std)
         loss = divergence(target_distributions, result_distribution, sample_num)
-        if loss < best_loss:
-            best_loss = loss
-            best_mean = copy.deepcopy(mean)
-            best_std = copy.deepcopy(std)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         loss_list.append(loss.detach().numpy())
+        if len(loss_list) >= 100:
+            smoothed_loss = sum(loss_list[-100:]) / 100
+            if smoothed_loss < best_loss:
+                best_loss = smoothed_loss
+                best_mean = copy.deepcopy(mean)
+                best_std = copy.deepcopy(std)
         if i % 100 == 0:
             img = plot_distribution(target_distributions, result_distribution, save_img=False)
             frame_list.append(img)
     # plot loss
-    plot_loss(loss_list,distance_measure)
+    plot_loss(loss_list,distance_measure,optimizer_type)
     return torch.distributions.normal.Normal(best_mean, best_std), frame_list
 
 
