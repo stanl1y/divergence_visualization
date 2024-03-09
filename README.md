@@ -39,17 +39,28 @@ More sample command can be found in the `run_code.sh` file.
 The program will generate a loss curve, a result distribution, and a gif visualizing the divergence minimization process. These files will be saved in the `results` folder.
 ### result of fkl divergence minimization
 * minimization process
+
 ![fkl](result/fkl_adam.gif)
+
 * loss curve
+
 ![fkl](result/loss_fkl_adam.png)
+
 * result distribution
+
 ![fkl](result/distribution_fkl_adam.png)
+
 ### result of rkl divergence minimization
 * minimization process
+
 ![rkl](result/rkl_adam.gif)
+
 * loss curve
+
 ![rkl](result/loss_rkl_adam.png)
+
 * result distribution
+
 ![rkl](result/distribution_rkl_adam.png)
 
 
